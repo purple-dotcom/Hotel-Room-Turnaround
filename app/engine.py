@@ -166,11 +166,7 @@ def assign_staff(
     }[kind]
 
     free = [s for s in staff if s.role == role and s.available and s.current_room_id is None]
-    pending = [
-        r
-        for r in rooms
-        if r.status in eligible_status and r.assigned_staff_id is None
-    ]
+    pending = [r for r in rooms if r.status in eligible_status and r.assigned_staff_id is None]
     if not free or not pending:
         return []
 

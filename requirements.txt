@@ -1,6 +1,13 @@
-fastapi==0.115.8
-uvicorn[standard]==0.34.0
-numpy==2.2.3
-scikit-learn==1.6.1
-scipy==1.15.2
-pydantic==2.10.6
+# fastapi==0.115.8
+# uvicorn[standard]==0.34.0
+# numpy==2.2.3
+# scikit-learn==1.6.1
+# scipy==1.15.2
+# pydantic==2.10.6
+
+fastapi==0.140.11
+uvicorn[standard]==0.52.4
+numpy==2.5.2
+scikit-learn==1.9.0
+scipy==1.18.1
+pydantic==2.13.4
