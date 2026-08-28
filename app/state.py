@@ -148,6 +148,8 @@ class HotelState:
             r.special_request = specials.get(r.id)
             if status == RoomStatus.DUE_OUT:
                 r.checkout_hour = 11.0
+            if status == RoomStatus.OCCUPIED and r.checkout_hour is None:
+                r.checkout_hour = 11.0 + (int(r.number) % 6)
             if status == RoomStatus.DIRTY:
                 r.checkout_hour = 10.5
                 r.guest_name = None
