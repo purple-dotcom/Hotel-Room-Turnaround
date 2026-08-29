@@ -22,6 +22,7 @@
       <div class="clock-block">
         <span class="muted">Hotel clock (simulated)</span>
         <strong id="clock">--:--</strong>
+        <span class="next-moves" id="nextMoves">Next out — · Next in —</span>
       </div>
       <nav class="tabs" role="tablist">
         <button class="tab on" data-tab="ops">Floor ops</button>
@@ -38,8 +39,13 @@
         <article class="panel">
           <header class="panel-h">
             <h2>Floor board</h2>
-            <p>Pick a room in the override bar, or click a tile — occupied/due-out checks out; others toggle VIP.</p>
+            <p>Each tile shows expected <strong>Out</strong> (checkout) and <strong>In</strong> (next arrival). Occupied/due-out click = checkout; other rooms toggle VIP.</p>
           </header>
+          <div class="legend">
+            <span><i class="lg out"></i> Checkout</span>
+            <span><i class="lg in"></i> Check-in</span>
+            <span><i class="lg late"></i> Time passed / guest waiting</span>
+          </div>
           <div id="floors" class="floors"></div>
           <div class="override">
             <label for="overrideRoom">Manual override</label>
@@ -56,6 +62,23 @@
           </div>
         </article>
         <aside class="side">
+          <article class="panel">
+            <header class="panel-h">
+              <h2>Expected movements</h2>
+              <p>Today’s check-outs and check-ins by hotel clock — this is what drives priority.</p>
+            </header>
+            <div id="movementSummary" class="movement-summary" aria-label="Movement summary"></div>
+            <div class="moves">
+              <div>
+                <h3>Check-outs <span id="outCount" class="count"></span></h3>
+                <ol id="moveOut" class="move-list"></ol>
+              </div>
+              <div>
+                <h3>Check-ins <span id="inCount" class="count"></span></h3>
+                <ol id="moveIn" class="move-list"></ol>
+              </div>
+            </div>
+          </article>
           <article class="panel">
             <header class="panel-h">
               <h2>Priority queue</h2>

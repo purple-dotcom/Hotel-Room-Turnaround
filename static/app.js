@@ -11,9 +11,50 @@ const STATUS_LABEL = {
 };
 
 function clock(hour) {
+  if (hour == null || Number.isNaN(Number(hour))) return "—";
   const h = Math.floor(hour) % 24;
   const m = Math.floor((hour - Math.floor(hour)) * 60);
   return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+}
+
+function showCheckout(r) {
+  return r.checkout_hour != null && (r.status === "occupied" || r.status === "due_out");
+}
+
+function showCheckin(r) {
+  return r.checkin_hour != null && r.incoming_guest && r.status !== "occupied";
+}
+
+function lateOut(r, hour) {
+  return showCheckout(r) && hour >= r.checkout_hour;
+}
+
+function lateIn(r, hour) {
+  return showCheckin(r) && hour >= r.checkin_hour;
+}
+
+function timeChips(r, hour) {
+  const chips = [];
+  if (showCheckout(r)) {
+    chips.push(
+      `<span class="chip out${lateOut(r, hour) ? " late" : ""}">Out ${clock(r.checkout_hour)}</span>`
+    );
+  }
+  if (showCheckin(r)) {
+    chips.push(
+      `<span class="chip in${lateIn(r, hour) ? " late" : ""}">In ${clock(r.checkin_hour)}</span>`
+    );
+  }
+  return chips.length ? `<div class="when-row">${chips.join("")}</div>` : "";
+}
+
+function roomTitle(r) {
+  const bits = [`Room ${r.number}`, STATUS_LABEL[r.status]];
+  if (showCheckout(r)) bits.push(`checkout ${clock(r.checkout_hour)}`);
+  if (showCheckin(r)) bits.push(`check-in ${clock(r.checkin_hour)} (${r.incoming_guest})`);
+  if (r.guest_name) bits.push(`in-house ${r.guest_name}`);
+  if (r.special_request) bits.push(r.special_request);
+  return bits.join(" · ");
 }
 
 document.querySelectorAll(".tab").forEach((btn) => {
@@ -42,7 +83,7 @@ function renderKpis(k) {
     .join("");
 }
 
-function renderFloors(rooms) {
+function renderFloors(rooms, hour) {
   const floors = [3, 2, 1];
   $("floors").innerHTML = floors
     .map((f) => {
@@ -52,10 +93,11 @@ function renderFloors(rooms) {
         .map((r) => {
           const extra = r.vip ? " vip" : "";
           const who = r.guest_name || r.incoming_guest || r.assigned_staff_id || "—";
-          return `<button class="room st-${r.status}${extra}" data-id="${r.id}" title="Checkout / VIP">
+          return `<button class="room st-${r.status}${extra}" data-id="${r.id}" title="${roomTitle(r).replaceAll('"', "&quot;")}">
             <span class="pill ${r.status}">${STATUS_LABEL[r.status]}</span>
             <div class="num">${r.number}${r.vip ? " ★" : ""}</div>
             <div class="meta">${r.room_type} · ${who}</div>
+            ${timeChips(r, hour)}
           </button>`;
         })
         .join("");
@@ -87,9 +129,9 @@ function renderQueue(q) {
       const tags = [
         r.vip ? `<span class="tag">VIP</span>` : "",
         r.special ? `<span class="tag">${r.special}</span>` : "",
-        r.checkin != null ? `<span class="tag">in ${clock(r.checkin)}</span>` : "",
+        r.checkin != null ? `<span class="tag">Check-in ${clock(r.checkin)}</span>` : "",
       ].join("");
-      return `<li><div><strong>${r.number}</strong> ${tags}<div class="meta">${r.status}</div></div><span class="score">${r.priority.toFixed(0)}</span></li>`;
+      return `<li><div><strong>${r.number}</strong> ${tags}<div class="meta">${STATUS_LABEL[r.status] || r.status}</div></div><span class="score">${r.priority.toFixed(0)}</span></li>`;
     })
     .join("");
 }
@@ -227,11 +269,65 @@ function toast(msg) {
   setTimeout(() => el.classList.add("hidden"), 2200);
 }
 
+function movementState(r, hour, type) {
+  const scheduled = type === "out" ? r.checkout_hour : r.checkin_hour;
+  if (hour >= scheduled) return type === "out" ? "due now" : "waiting";
+  const minutes = Math.round((scheduled - hour) * 60);
+  if (minutes < 60) return `in ${minutes}m`;
+  return `in ${Math.floor(minutes / 60)}h ${minutes % 60}m`;
+}
+
+function renderMovements(rooms, hour, kpis) {
+  const outs = rooms
+    .filter((r) => showCheckout(r))
+    .sort((a, b) => a.checkout_hour - b.checkout_hour);
+  const ins = rooms
+    .filter((r) => showCheckin(r))
+    .sort((a, b) => a.checkin_hour - b.checkin_hour);
+
+  const outHtml = outs.length
+    ? outs
+        .map((r) => {
+          const late = lateOut(r, hour) ? " late" : "";
+          const name = r.guest_name || "—";
+          return `<li class="${late}"><span class="t">${clock(r.checkout_hour)} · ${r.number}</span><span class="who">${name}${r.status === "due_out" ? " · due out" : ""}</span><span class="movement-state">${movementState(r, hour, "out")}</span></li>`;
+        })
+        .join("")
+    : "<li>No remaining check-outs on the board.</li>";
+
+  const inHtml = ins.length
+    ? ins
+        .map((r) => {
+          const late = lateIn(r, hour) ? " late" : "";
+          const wait = late ? " · waiting" : "";
+          return `<li class="${late}"><span class="t">${clock(r.checkin_hour)} · ${r.number}</span><span class="who">${r.incoming_guest}${wait}</span><span class="movement-state">${movementState(r, hour, "in")}</span></li>`;
+        })
+        .join("")
+    : "<li>No expected arrivals yet.</li>";
+
+  $("moveOut").innerHTML = outHtml;
+  $("moveIn").innerHTML = inHtml;
+  $("outCount").textContent = outs.length ? outs.length : "0";
+  $("inCount").textContent = ins.length ? ins.length : "0";
+  $("movementSummary").innerHTML = [
+    ["Completed out", kpis.checkouts_today, "out"],
+    ["Completed in", kpis.checkins_today, "in"],
+    ["Guests waiting", kpis.guests_waiting, kpis.guests_waiting ? "alert" : ""],
+  ].map(([label, value, tone]) => `<div class="movement-stat ${tone}"><strong>${value}</strong><span>${label}</span></div>`).join("");
+
+  const nextOut = outs.find((r) => r.checkout_hour >= hour) || outs[0];
+  const nextIn = ins.find((r) => r.checkin_hour >= hour) || ins[0];
+  const outBit = nextOut ? `Next out ${clock(nextOut.checkout_hour)} · ${nextOut.number}` : "Next out —";
+  const inBit = nextIn ? `Next in ${clock(nextIn.checkin_hour)} · ${nextIn.number}` : "Next in —";
+  $("nextMoves").textContent = `${outBit} · ${inBit}`;
+}
+
 function paint(state) {
   $("clock").textContent = state.kpis.hotel_clock;
   $("dayLabel").textContent = state.day_label;
   renderKpis(state.kpis);
-  renderFloors(state.rooms);
+  renderFloors(state.rooms, state.hotel_hour);
+  renderMovements(state.rooms, state.hotel_hour, state.kpis);
   fillOverrideSelect(state.rooms);
   renderQueue(state.analytics.priority_queue || []);
   renderStaffLive(state.analytics.staff || []);
