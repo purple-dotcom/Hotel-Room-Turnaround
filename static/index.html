@@ -20,9 +20,9 @@
         </div>
       </div>
       <div class="clock-block">
-        <span class="muted">Hotel clock (simulated)</span>
+        <!-- <span class="muted">Hotel clock (simulated)</span> -->
         <strong id="clock">--:--</strong>
-        <span class="next-moves" id="nextMoves">Next out — · Next in —</span>
+        <!-- <span class="next-moves" id="nextMoves">Next out — · Next in —</span> -->
       </div>
       <nav class="tabs" role="tablist">
         <button class="tab on" data-tab="ops">Floor ops</button>
@@ -39,7 +39,7 @@
         <article class="panel">
           <header class="panel-h">
             <h2>Floor board</h2>
-            <p>Each tile shows expected <strong>Out</strong> (checkout) and <strong>In</strong> (next arrival). Occupied/due-out click = checkout; other rooms toggle VIP.</p>
+            <!-- <p>Each tile shows expected <strong>Out</strong> (checkout) and <strong>In</strong> (next arrival). Occupied/due-out click = checkout; other rooms toggle VIP.</p> -->
           </header>
           <div class="legend">
             <span><i class="lg out"></i> Checkout</span>
@@ -64,8 +64,8 @@
         <aside class="side">
           <article class="panel">
             <header class="panel-h">
-              <h2>Expected movements</h2>
-              <p>Today’s check-outs and check-ins by hotel clock — this is what drives priority.</p>
+              <h2>Expected Movements</h2>
+              <!-- <p>Today’s check-outs and check-ins by hotel clock — this is what drives priority.</p> -->
             </header>
             <div id="movementSummary" class="movement-summary" aria-label="Movement summary"></div>
             <div class="moves">
@@ -81,29 +81,25 @@
           </article>
           <article class="panel">
             <header class="panel-h">
-              <h2>Priority queue</h2>
-              <p>Scored from arrivals, VIP, specials, and delay.</p>
+              <h2><span title="Scored from arrivals, VIP, specials, and delay">Queue</span></h2>
             </header>
             <ol id="queue" class="queue"></ol>
           </article>
           <article class="panel">
             <header class="panel-h">
-              <h2>Staff</h2>
-              <p>Live workload — specialty and seniority.</p>
+              <h2><span title="Live workload — specialty and seniority">Staff</span></h2>
             </header>
             <ul id="staffLive" class="staff-live"></ul>
           </article>
           <article class="panel">
             <header class="panel-h">
-              <h2>Event log</h2>
-              <p>Full operational trace, including overrides.</p>
+              <h2><span title="Full operational trace, including overrides">Event log</span></h2>
             </header>
             <ul id="eventLog" class="event-log"></ul>
           </article>
           <article class="panel">
             <header class="panel-h">
-              <h2>Anomalies</h2>
-              <p>Isolation Forest vs simulated history — local, no API.</p>
+              <h2><span title="Isolation Forest vs simulated history">Anomalies</span></h2>
             </header>
             <ul id="anomalies" class="plain"></ul>
           </article>
@@ -114,8 +110,8 @@
     <main id="view-assign" class="view">
       <article class="panel">
         <header class="panel-h">
-          <h2>Hungarian assignment (live)</h2>
-          <p>Minimum-cost matching of free staff to highest-priority rooms. Cost mixes ETA, floor distance, workload, VIP and arrival urgency.</p>
+          <h2>Live Assignment</h2>
+          <!-- <p>Minimum-cost matching of free staff to highest-priority rooms. Cost mixes ETA, floor distance, workload, VIP and arrival urgency.</p> -->
         </header>
         <table class="grid">
           <thead>
@@ -153,7 +149,7 @@
       <article class="panel">
         <header class="panel-h">
             <h2>Workload & performance</h2>
-            <p>Specialty (housekeeping, inspection, maintenance) and seniority sit in the assignment cost mix via role matching.</p>
+            <!-- <p>Specialty (housekeeping, inspection, maintenance) and seniority sit in the assignment cost mix via role matching.</p> -->
         </header>
         <div id="staffCards" class="staff-cards"></div>
       </article>
@@ -170,7 +166,7 @@
     </main>
 
     <footer class="foot">
-      SIH internal · PCACS PS 4 · Classical ML + optimization on-device (scikit-learn Isolation Forest, SciPy Hungarian). No external AI API.
+      SIH · PCACS PS 4
     </footer>
   </div>
   <div id="toast" class="toast hidden"></div>

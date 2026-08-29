@@ -49,14 +49,6 @@ p { margin: 0; }
 .clock-block strong {
   display: block; font-family: Fraunces, serif; font-size: 1.8rem; line-height: 1;
 }
-.next-moves {
-  display: block;
-  margin-top: 6px;
-  font-size: 0.75rem;
-  color: var(--muted);
-  max-width: 260px;
-  margin-left: auto;
-}
 
 .tabs { display: flex; gap: 6px; background: #e9dfcc; padding: 4px; border-radius: 999px; }
 .tab {

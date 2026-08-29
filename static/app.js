@@ -68,7 +68,7 @@ document.querySelectorAll(".tab").forEach((btn) => {
 
 function renderKpis(k) {
   const items = [
-    ["Clock", k.hotel_clock],
+    // ["Clock", k.hotel_clock],
     ["Ready", k.ready],
     ["Dirty", k.dirty],
     ["Cleaning", k.cleaning],
@@ -138,7 +138,7 @@ function renderQueue(q) {
 
 function renderAnomalies(list, rooms) {
   if (!list.length) {
-    $("anomalies").innerHTML = "<li>No outliers vs historical clean times.</li>";
+    $("anomalies").innerHTML = "<li>No anomalies</li>";
     return;
   }
   const byId = Object.fromEntries(rooms.map((r) => [r.id, r]));
@@ -315,11 +315,6 @@ function renderMovements(rooms, hour, kpis) {
     ["Guests waiting", kpis.guests_waiting, kpis.guests_waiting ? "alert" : ""],
   ].map(([label, value, tone]) => `<div class="movement-stat ${tone}"><strong>${value}</strong><span>${label}</span></div>`).join("");
 
-  const nextOut = outs.find((r) => r.checkout_hour >= hour) || outs[0];
-  const nextIn = ins.find((r) => r.checkin_hour >= hour) || ins[0];
-  const outBit = nextOut ? `Next out ${clock(nextOut.checkout_hour)} · ${nextOut.number}` : "Next out —";
-  const inBit = nextIn ? `Next in ${clock(nextIn.checkin_hour)} · ${nextIn.number}` : "Next in —";
-  $("nextMoves").textContent = `${outBit} · ${inBit}`;
 }
 
 function paint(state) {
