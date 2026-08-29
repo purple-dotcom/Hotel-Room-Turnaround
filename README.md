@@ -39,6 +39,10 @@ All decisions run locally — no external AI API, no rate limits, no internet de
 
 Requires Python 3.14.
 
+**Windows — one-click:** double-click `run.bat`. It creates the virtual environment, installs dependencies, and starts the server on its own.
+
+**Manual (any OS):**
+
 ```bash
 python -m venv .venv
 source .venv/bin/activate   # Windows: .venv\Scripts\activate
