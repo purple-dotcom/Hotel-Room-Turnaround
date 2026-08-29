@@ -32,7 +32,7 @@ def estimate_clean_minutes(room: Room, staff: Staff | None = None) -> float:
 
 
 def room_priority(room: Room, hotel_hour: float) -> float:
-    """Higher score = clean sooner. Mix of arrivals, VIP, delay, occupancy cycle."""
+    #Higher score = clean sooner. Mix of arrivals, VIP, delay, occupancy cycle
     score = 10.0
     if room.status in (RoomStatus.OCCUPIED, RoomStatus.READY):
         return 0.0
@@ -66,7 +66,7 @@ def room_priority(room: Room, hotel_hour: float) -> float:
         if elapsed > room.estimated_minutes:
             score += min(40.0, (elapsed - room.estimated_minutes) * 1.2)
 
-    # slight floor-cluster bias is applied in assignment cost, not here
+    # slight floor cluster bias is applied in assignment cost, not here
     return round(score, 2)
 
 
@@ -152,7 +152,7 @@ def assign_staff(
     hotel_hour: float,
     kind: TaskKind,
 ) -> list[tuple[Staff, Room, float, str]]:
-    """Hungarian assignment: min cost matching of free staff to pending rooms."""
+    #Hungarian assignment: min cost matching of free staff to pending rooms
     role = {
         TaskKind.CLEAN: StaffRole.HOUSEKEEPING,
         TaskKind.INSPECT: StaffRole.INSPECTOR,
@@ -207,7 +207,7 @@ def assign_staff(
             if floor_pen == 0:
                 bits.append(f"same floor {r.floor}")
             else:
-                bits.append(f"floor Δ{abs(s.floor - r.floor)}")
+                bits.append(f"floor {abs(s.floor - r.floor)}")
             bits.append(f"load {int(s.minutes_worked)}m")
             reasons[(i, j)] = ", ".join(bits)
 

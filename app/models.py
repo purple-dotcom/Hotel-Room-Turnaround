@@ -77,6 +77,7 @@ class Room(BaseModel):
     actual_minutes: float = 0.0
     last_cleaned_hour: Optional[float] = None
     notes: str = ""
+    duration_multiplier: float = 1.0
 
 
 class Staff(BaseModel):

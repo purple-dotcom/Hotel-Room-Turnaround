@@ -4,6 +4,7 @@ import copy
 import threading
 import uuid
 from typing import Optional
+import random
 
 from app.engine import AnomalyModel, assign_staff, estimate_clean_minutes, room_priority
 from app.models import (
@@ -59,6 +60,18 @@ KIND_LABEL = {
 
 def _uid(prefix: str) -> str:
     return f"{prefix}-{uuid.uuid4().hex[:6]}"
+
+def _sample_duration_multiplier() -> float:
+    """How long a task actually takes vs. its formula ETA.
+
+    Mirrors synthesize_history()'s injection rate in engine.py so live
+    tasks occasionally run long enough for the 115%-delay check and the
+    Isolation Forest to actually have something to catch.
+    """
+    mult = max(0.7, random.gauss(1.0, 0.15))
+    if random.random() < 0.07:
+        mult *= random.uniform(2.4, 4.2)
+    return round(mult, 3)
 
 
 class HotelState:
@@ -242,6 +255,7 @@ class HotelState:
                 t.done = True
         room.assigned_staff_id = None
         room.task_started_hour = None
+        room.duration_multiplier = 1.0
 
     def force_checkout(self, room_id: str) -> dict:
         with self.lock:
@@ -294,7 +308,7 @@ class HotelState:
             return {"ok": True}
 
     def tick(self, dt_hours: float = 0.04) -> None:
-        """Advance simulated hotel time (~2.4 minutes per real second at default)."""
+        #Advance simulated hotel time (~2.4 minutes per real second at default)
         with self.lock:
             self.hour = round(self.hour + dt_hours, 3)
             if self.hour >= 22:
@@ -338,7 +352,7 @@ class HotelState:
                 eta = 11.0
             if r.status == RoomStatus.MAINTENANCE:
                 eta = 22.0
-            if elapsed_min < eta:
+            if elapsed_min < eta * r.duration_multiplier:
                 continue
             self._complete_room_step(r)
 
@@ -353,6 +367,8 @@ class HotelState:
             staff.available = True
             staff.current_room_id = None
             staff.floor = r.floor
+
+        r.duration_multiplier = 1.0
 
         if r.status == RoomStatus.CLEANING:
             r.status = RoomStatus.INSPECT
@@ -413,6 +429,7 @@ class HotelState:
                 room.assigned_staff_id = st.id
                 room.task_started_hour = self.hour
                 room.estimated_minutes = estimate_clean_minutes(room, st)
+                room.duration_multiplier = _sample_duration_multiplier()
                 if kind == TaskKind.CLEAN:
                     room.status = RoomStatus.CLEANING
                 elif kind == TaskKind.INSPECT:
@@ -468,13 +485,13 @@ class HotelState:
                 r.checkout_hour = min(21.0, self.hour + 18)
                 self.checkins_today += 1
                 self._log(f"Guest checked in to room {r.number}.", EventKind.CHECKIN)
-        # Recycle empty ready rooms into future arrivals
-        idle_ready = [r for r in self.rooms.values() if r.status == RoomStatus.READY and r.checkin_hour is None]
-        if idle_ready and int(self.hour * 20) % 9 == 0:
-            r = idle_ready[0]
-            r.checkin_hour = self.hour + 1.2
-            r.incoming_guest = f"{FIRST_NAMES[int(self.hour) % len(FIRST_NAMES)]} {LAST_NAMES[int(self.hour * 3) % len(LAST_NAMES)]}"
-            r.vip = int(self.hour) % 5 == 0
+
+        # Recycle empty ready rooms into future arrivals — every idle room gets a new arrival queued, staggered a bit so they don't all land at once.
+        idle_ready = [r for r in self.rooms.values() if r.status == RoomStatus.READY and r.incoming_guest is None]
+        for i, r in enumerate(idle_ready):
+            r.checkin_hour = self.hour + 0.25 + 0.15 * i
+            r.incoming_guest = f"{FIRST_NAMES[int(self.hour * 7 + i) % len(FIRST_NAMES)]} {LAST_NAMES[int(self.hour * 11 + i) % len(LAST_NAMES)]}"
+            r.vip = (int(self.hour * 3) + i) % 5 == 0
             self._log(f"New check-in expected for room {r.number}.", EventKind.CHECKIN)
 
         # Occupied rooms without checkout get one later in the day
