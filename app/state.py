@@ -78,7 +78,7 @@ class HotelState:
     def __init__(self) -> None:
         self.lock = threading.Lock()
         self.hour = 9.0  # 09:00 hotel time
-        self.day_label = "Demo day · 24 rooms · 3 floors"
+        self.day_label = ""
         self.rooms: dict[str, Room] = {}
         self.staff: dict[str, Staff] = {}
         self.tasks: dict[str, Task] = {}
@@ -294,7 +294,7 @@ class HotelState:
     def reset(self) -> dict:
         with self.lock:
             self.hour = 9.0
-            self.day_label = "Demo day · 24 rooms · 3 floors"
+            self.day_label = ""
             self.rooms.clear()
             self.staff.clear()
             self.tasks.clear()
